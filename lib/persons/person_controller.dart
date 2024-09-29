@@ -1,109 +1,66 @@
 import 'package:flutter/material.dart';
-import '/objectbox.g.dart';
-import 'dart:core';
+
 import '../models/person_model.dart';
+import 'person_repository.dart';
 
-class BirthdayReminderModel extends ChangeNotifier {
-  final Store _store;
+class PersonController extends ChangeNotifier {
+  final PersonRepository personRepository;
 
-  String name = '';
+  PersonController(this.personRepository);
 
-  String? surname;
-
-  String? middlename;
-
-  String? description;
-
-  DateTime databorn;
-
-  BirthdayReminderModel(
-    this._store,
-    this.name,
-    this.databorn, {
-    this.description,
-    this.surname,
-    this.middlename,
-  });
-
-//карточка для создания
-
-  void createCard() {
+  //карточка для создания
+  void createCard(
+    String name,
+    String? surname,
+    String? middlename,
+    DateTime databorn,
+    String? description,
+  ) {
     var person = Person();
-
     person.name = name;
-
     person.surname = surname ?? '';
-
     person.middlename = middlename ?? '';
-
     person.dayOfBirth = databorn.day;
-
     person.monthOfBirth = databorn.month;
-
     person.yearOfBirth = databorn.year;
-
     person.description = description ?? '';
 
-    final box = _store.box<Person>();
-
-    box.put(person); //добавляем запись в бд
-
+    personRepository.addPerson(person);
     notifyListeners();
   }
 
-  void getDataFromDb() {
-    DateTime now = DateTime.now();
+  //изменение карточки
+  void updateCard(
+    int id,
+    String name,
+    String? surname,
+    String? middlename,
+    DateTime databorn,
+    String? description,
+  ) {
+    var person = Person();
+    person.id = id;
+    person.name = name;
+    person.surname = surname ?? '';
+    person.middlename = middlename ?? '';
+    person.dayOfBirth = databorn.day;
+    person.monthOfBirth = databorn.month;
+    person.yearOfBirth = databorn.year;
+    person.description = description ?? '';
 
-    int todayDay = now.day;
-
-    int todayMonth = now.month;
-
-    final box = _store.box<Person>();
-
-    final query = box
-        .query(Person_.dayOfBirth.equals(todayDay) &
-            Person_.monthOfBirth.equals(todayMonth))
-        .build();
-
-    final matchingPersons = query.find();
-
-    query.close();
-
-    if (matchingPersons.isEmpty) {
-      return;
-    } else {
-      compareDate(matchingPersons);
-    }
+    personRepository.updatePersonCard(person);
+    notifyListeners();
   }
 
-  int _calculateAge(DateTime birthDate) {
-    DateTime now = DateTime.now();
-
-    int age = now.year - birthDate.year;
-
-    if (now.month < birthDate.month ||
-        (now.month == birthDate.month && now.day < birthDate.day)) {
-      age--;
-    }
-
-    return age;
+  //удаление карточки
+  void deleteCard(Person person) {
+    personRepository.deleteCard(person);
+    notifyListeners();
   }
 
-//функция сравнения дат
-
-  void compareDate(List<Person> persons) {
-    for (var person in persons) {
-      DateTime birthDate = DateTime(
-        person.yearOfBirth,
-        person.monthOfBirth,
-        person.dayOfBirth,
-      );
-
-      int age = _calculateAge(birthDate);
-    }
-
-    void rewriteCard() {
-      var person = Person();
-    }
+  //удаление карточек
+  void deleteAllCards(Person person) {
+    personRepository.deleteAllCards();
+    notifyListeners();
   }
 }
